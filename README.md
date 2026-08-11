@@ -111,6 +111,25 @@ what the panel is *for*.
   was watching.
 - **Reduce motion and reduce transparency** are both honoured.
 
+## Install
+
+A built copy is attached to every [release][releases]. One line puts it in
+`/Applications`, clears the download flag and opens it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/karazhaniman72-eng/notchshelf/main/scripts/install.sh | bash
+```
+
+By hand: download the zip, drag the app into `/Applications`, then
+`xattr -dr com.apple.quarantine /Applications/NotchShelf.app`. The app is signed,
+but not by Apple — a developer certificate is $99 a year — so macOS would refuse
+it until that flag is off. The whole of what it does is in this repository.
+
+Russian walk-through for someone who has not used a terminal before:
+[УСТАНОВКА.md](УСТАНОВКА.md).
+
+[releases]: https://github.com/karazhaniman72-eng/notchshelf/releases
+
 ## Requirements
 
 - macOS 14 or later, MacBook with a notch (it falls back to a centred strip
@@ -128,6 +147,10 @@ open NotchShelf.app
 ```
 
 `build.sh` compiles with SwiftPM, assembles the `.app` bundle and signs it.
+`scripts/release.sh` does that and then packs a copy signed ad-hoc into
+`dist/NotchShelf-<version>.zip`, which is the file that goes on a release: the
+certificate below is trusted on one machine only, so the copy that leaves it
+carries no identity at all rather than an unknown one.
 
 > Launch the built `.app`, not the raw binary in `.build/`. macOS grants folder
 > access to app bundles; a bare executable started from a terminal inherits the
