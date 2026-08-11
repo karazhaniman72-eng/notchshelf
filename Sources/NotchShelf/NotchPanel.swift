@@ -188,8 +188,8 @@ final class PanelController {
         // The menu bar sits at 24 and has to stay under us or a seam shows; the
         // status items and their popovers sit at 25, and every menu the system
         // drops down is at 101. Sitting between the two — just above 26, which
-        // is where Claude keeps a strip across the top of the screen — is what
-        // leaves both the panel and the menu bar usable.
+        // is where another app that keeps a strip across the top of the screen
+        // sits — is what leaves both the panel and the menu bar usable.
         panel.level = NSWindow.Level(NSWindow.Level.statusBar.rawValue + 2)
         panel.isOpaque = false
         panel.backgroundColor = .clear

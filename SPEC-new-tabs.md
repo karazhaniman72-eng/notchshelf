@@ -1,7 +1,7 @@
 # Brief: Timer, Weather, System
 
 > **Shipped on 8 August 2026.** All three tabs run on real stores now:
-> `TimerStore`, `WeatherStore`, `SystemStore`, plus `ClaudeLimitStore` behind
+> `TimerStore`, `WeatherStore`, `SystemStore`, plus a usage-window store behind
 > the timer. Three parts of the brief below were overruled by the owner after
 > seeing the mocks on screen, and the code follows the newer decision:
 >
@@ -16,7 +16,7 @@
 >   Clear button that runs `purge` — which needs root, so macOS puts up its own
 >   password prompt. Disk shrank to the footnote next to uptime.
 > - **Timer** presets are 30 minutes, 1 hour and 3 hours, and the tab also shows
->   when the current Claude Code five-hour window resets.
+>   when the current five-hour usage window resets.
 >
 > A phone's battery was asked for and is not here: nothing outside Apple's own
 > apps can read it. Bluetooth does not carry it and there is no public API.

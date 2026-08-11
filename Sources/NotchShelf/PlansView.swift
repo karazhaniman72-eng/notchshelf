@@ -320,7 +320,7 @@ private struct TimerPanel: View {
             }
 
             // Two lines used to live here: the tally of blocks done today and
-            // the countdown to the next Claude Code window. Both were small grey
+            // the countdown to the next usage window. Both were small grey
             // text in the corner of a tab that is supposed to show the day, and
             // neither was ever acted on — which is the definition of the noise
             // this tab was told to lose.
