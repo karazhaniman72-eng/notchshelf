@@ -1,0 +1,5 @@
+{
+  "rules": {
+    "swift/hardcoded-font-size": "off"
+  }
+}
