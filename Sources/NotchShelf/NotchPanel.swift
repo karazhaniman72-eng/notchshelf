@@ -758,7 +758,12 @@ final class PanelController {
     /// Used to check the real window rather than a hopeful copy of it.
     private func listenForSnapshotRequests() {
         snapshotTrigger = SnapshotTrigger { [weak self] raw in
-            self?.snapshotQueue.append(raw)
+            // Trimmed, and dropped when it says nothing, the same as the file
+            // below: an empty request splits into no parts at all, and the tab
+            // is read out of it by index.
+            let wanted = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !wanted.isEmpty else { return }
+            self?.snapshotQueue.append(wanted)
             self?.serveSnapshotQueue()
         }
     }
