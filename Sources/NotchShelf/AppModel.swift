@@ -11,9 +11,7 @@ final class AppModel: ObservableObject {
     let timer = TimerStore()
     let system = SystemStore()
     let weather = WeatherStore()
-    let plans = PlansStore()
     let math = MathStore()
-    let theorem = TheoremStore()
     let network = NetworkStore()
     let colors = ColorStore()
     let downloads = DownloadsStore()
@@ -30,7 +28,12 @@ final class AppModel: ObservableObject {
 
     // Added 11 August 2026.
     let settings = SettingsStore()
-    /// Lazy for one reason: it needs the shelf, and a stored property cannot
-    /// reach a sibling before the object exists.
+
+    /// Lazy for one reason: each of these needs a sibling, and a stored property
+    /// cannot reach one before the object exists.
     private(set) lazy var recorder = RecordStore(shelf: shelf)
+    /// Both read somebody's own folder, and which folder that is belongs to
+    /// `settings` rather than to a constant in the source.
+    private(set) lazy var plans = PlansStore(settings: settings)
+    private(set) lazy var theorem = TheoremStore(settings: settings)
 }

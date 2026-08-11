@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// How much of the desktop shows through the panel.
@@ -69,8 +70,31 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    /// The two folders the panel reads somebody's own files out of.
+    ///
+    /// Nil until one is picked, and nil is a perfectly good state: the tabs that
+    /// use them say so and offer the button. They used to be constants in
+    /// `PlansStore` and `TheoremStore` pointing at one particular person's
+    /// knowledge base, which worked exactly once — on that person's Mac — and
+    /// silently showed nothing on anybody else's.
+    ///
+    /// A path rather than a security-scoped bookmark because this app is not
+    /// sandboxed. What gates `~/Documents` here is TCC, which grants by
+    /// application rather than by folder, so a bookmark would buy nothing that
+    /// the plain path does not already have — as long as the app has a stable
+    /// signature. See the note about the signing certificate in `build.sh`.
+    @Published private(set) var plansFolder: URL? {
+        didSet { Self.store(plansFolder, at: Self.plansKey) }
+    }
+
+    @Published private(set) var textbooksFolder: URL? {
+        didSet { Self.store(textbooksFolder, at: Self.textbooksKey) }
+    }
+
     private static let hiddenKey = "settings.hiddenTabs"
     private static let backdropKey = "settings.backdrop"
+    private static let plansKey = "settings.plansFolder"
+    private static let textbooksKey = "settings.textbooksFolder"
 
     init() {
         let defaults = UserDefaults.standard
@@ -82,6 +106,8 @@ final class SettingsStore: ObservableObject {
         // reason about everywhere else.
         hidden = saved.count >= PanelTab.allCases.count ? [] : saved
         backdrop = Backdrop(rawValue: defaults.string(forKey: Self.backdropKey) ?? "") ?? .solid
+        plansFolder = Self.folder(at: Self.plansKey)
+        textbooksFolder = Self.folder(at: Self.textbooksKey)
         // `didSet` does not run for a value set in `init`, and the panel draws
         // its first frame from `Theme` before anything is ever changed — so the
         // skin has to be told here as well or a saved white background comes
@@ -122,5 +148,92 @@ final class SettingsStore: ObservableObject {
     /// pointing at something that is no longer in the row.
     func resolve(_ tab: PanelTab) -> PanelTab {
         isOn(tab) ? tab : (tabs.first ?? PanelTab.allCases[0])
+    }
+
+    // MARK: - Folders
+
+    enum Folder {
+        case plans, textbooks
+
+        var title: String {
+            switch self {
+            case .plans: return "Plans"
+            case .textbooks: return "Textbooks"
+            }
+        }
+
+        /// What the tab does with it, in one line, so the choice is not a guess.
+        var detail: String {
+            switch self {
+            case .plans: return "today.md and goals.md are read from here"
+            case .textbooks: return "One theorem a day out of the newest book"
+            }
+        }
+    }
+
+    func folder(_ which: Folder) -> URL? {
+        switch which {
+        case .plans: return plansFolder
+        case .textbooks: return textbooksFolder
+        }
+    }
+
+    /// Opens the picker and keeps whatever comes back.
+    ///
+    /// The app has to be brought to the front first: it is an accessory with no
+    /// windows of its own, and an open panel from an inactive accessory can
+    /// appear behind whatever is on screen with no way to reach it.
+    func chooseFolder(_ which: Folder) {
+        let dialog = NSOpenPanel()
+        dialog.canChooseFiles = false
+        dialog.canChooseDirectories = true
+        dialog.allowsMultipleSelection = false
+        dialog.canCreateDirectories = false
+        dialog.prompt = "Use this folder"
+        dialog.message = "Where should \(which.title) read from?"
+        dialog.directoryURL = folder(which)
+
+        NSApp.activate(ignoringOtherApps: true)
+        dialog.begin { [weak self] response in
+            guard response == .OK, let url = dialog.url else { return }
+            self?.set(which, to: url)
+        }
+    }
+
+    func forget(_ which: Folder) { set(which, to: nil) }
+
+    private func set(_ which: Folder, to url: URL?) {
+        switch which {
+        case .plans: plansFolder = url
+        case .textbooks: textbooksFolder = url
+        }
+        Log.write("folder \(which.title)=\(url?.path ?? "none")")
+    }
+
+    private static func store(_ url: URL?, at key: String) {
+        let defaults = UserDefaults.standard
+        if let url {
+            defaults.set(url.path, forKey: key)
+        } else {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    /// What was saved, taken at its word.
+    ///
+    /// It checked `fileExists` first, on the reasoning that a path which has
+    /// been moved is worth less than nothing. That check was wrong twice over.
+    /// It is a disk call on the main thread during launch, into a folder macOS
+    /// gates — the one thing this app has learned the hard way never to do,
+    /// because a gated call to a background app does not fail, it waits. And
+    /// `fileExists` answers **false** for a folder that is perfectly well there
+    /// but not yet permitted, so the first launch after a rebuild threw the
+    /// setting away and the tab announced that no folder had ever been chosen.
+    ///
+    /// Whether the folder can be read is the reading code's business, on its own
+    /// queue, where the answer can be reported instead of guessed.
+    private static func folder(at key: String) -> URL? {
+        guard let path = UserDefaults.standard.string(forKey: key), !path.isEmpty else { return nil }
+        return URL(fileURLWithPath: path, isDirectory: true)
     }
 }

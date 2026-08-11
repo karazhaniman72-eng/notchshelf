@@ -21,13 +21,24 @@ final class PlansStore: ObservableObject {
         let line: Int
     }
 
-    /// The vault. Nothing else in the app knows this path, and if it moves the
-    /// tab simply falls back to saying so.
-    private let vault = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Documents/s/imanClaude/Plans", isDirectory: true)
+    /// Where the plan lives, chosen by whoever is using the app.
+    ///
+    /// It was a constant here — one particular person's knowledge base, spelled
+    /// out in the source — which is fine right up until somebody else runs the
+    /// app and this tab is silently, permanently empty for them.
+    private let settings: SettingsStore
+
+    private var vault: URL? { settings.plansFolder }
+
+    init(settings: SettingsStore) {
+        self.settings = settings
+    }
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var source = ""
+    /// Nothing has been chosen yet, which is a different thing from a folder
+    /// with nothing in it — and gets a different empty state.
+    var hasFolder: Bool { vault != nil }
 
     /// Re-read on every open: the file is edited by hand during the day.
     ///
@@ -37,19 +48,23 @@ final class PlansStore: ObservableObject {
     /// not fail, it waits. A background app is never shown the dialogue it is
     /// waiting for, so the read never returns and the panel freezes with it.
     func reload() {
+        guard let vault else {
+            publish([], from: "")
+            return
+        }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
 
-            if let plans = self.read("today.md", section: "## Планы", isGoal: false), !plans.isEmpty {
-                self.publish(plans, from: "Plans/today.md")
+            if let plans = self.read("today.md", in: vault, section: "## Планы", isGoal: false), !plans.isEmpty {
+                self.publish(plans, from: "today.md")
                 return
             }
-            if let goals = self.read("goals.md", section: "## Долгосрочные", isGoal: true), !goals.isEmpty {
-                self.publish(goals, from: "Plans/goals.md")
+            if let goals = self.read("goals.md", in: vault, section: "## Долгосрочные", isGoal: true), !goals.isEmpty {
+                self.publish(goals, from: "goals.md")
                 return
             }
             self.publish([], from: "")
-            Log.write("plans empty vault=\(self.vault.path)")
+            Log.write("plans empty vault=\(vault.path)")
         }
     }
 
@@ -62,17 +77,31 @@ final class PlansStore: ObservableObject {
         }
     }
 
-    /// Bullets under one heading, stopping at the next one.
-    private func read(_ name: String, section: String, isGoal: Bool) -> [Item]? {
+    /// Bullets under one heading, stopping at the next one — or the whole file
+    /// when that heading is not in it.
+    ///
+    /// The headings are the ones this was written against and they are in
+    /// Russian, which is right for the file it was written against and useless
+    /// for anybody else's `today.md`. Rather than making the heading a second
+    /// setting nobody would find, a file with no such heading is read straight
+    /// through: every top-level bullet in it is a plan. A file that *does* have
+    /// the heading behaves exactly as before.
+    private func read(_ name: String, in vault: URL, section: String, isGoal: Bool) -> [Item]? {
         guard let text = try? String(contentsOf: vault.appendingPathComponent(name), encoding: .utf8) else {
             Log.write("plans missing file=\(name)")
             return nil
         }
 
-        var collecting = false
+        let lines = text.components(separatedBy: "\n")
+        let sectioned = lines.contains { $0.trimmingCharacters(in: .whitespaces) == section }
+
+        var collecting = !sectioned
         var found: [Item] = []
-        for (number, line) in text.components(separatedBy: "\n").enumerated() {
+        for (number, line) in lines.enumerated() {
             if line.hasPrefix("## ") {
+                // Without the heading there is nothing to stop at: the whole
+                // file is the list, headings inside it and all.
+                guard sectioned else { continue }
                 if collecting { break }
                 collecting = line.trimmingCharacters(in: .whitespaces) == section
                 continue
@@ -104,9 +133,10 @@ final class PlansStore: ObservableObject {
     func toggle(_ item: Item) {
         // Same reason as `reload`: the write goes to a gated folder, and a
         // gated folder can hold the call. A tick must never freeze the panel.
+        guard let vault else { return }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
-            let url = self.vault.appendingPathComponent(item.file)
+            let url = vault.appendingPathComponent(item.file)
             guard let text = try? String(contentsOf: url, encoding: .utf8) else { return }
 
             var lines = text.components(separatedBy: "\n")

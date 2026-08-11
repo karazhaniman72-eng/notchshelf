@@ -43,10 +43,12 @@ replaces.
   is the only copy.
 - **Downloads** — the last things that landed in `~/Downloads`, draggable out
   the same way shelf cards are.
-- **Plans** — the day, out of a markdown file, with the month unfolding from the
-  top left corner. Ticking a line writes `- [x]` back into the file. On the
-  right, a timer that keeps counting with the panel shut, and a switch that
-  keeps the Mac awake.
+- **Plans** — the day: calendar events if macOS will give them, otherwise the
+  bullets out of `today.md` in a folder you point at, with `goals.md` behind it.
+  Ticking a line writes `- [x]` back into the file, which is what Obsidian would
+  have written. The month unfolds from the top left corner. On the right, a
+  timer that keeps counting with the panel shut, and a switch that keeps the Mac
+  awake.
 - **Calc** — the field takes the keyboard the moment the tab opens. **The model
   never does arithmetic.** Sums, LaTeX and words all end up as an expression,
   and a parser in `MathStore.swift` works out the number: integrals by Simpson,
@@ -56,7 +58,7 @@ replaces.
   every time.
   Its tools: **Graph** — drag to pan, scroll to zoom, crossings ringed in each
   curve's own colour and named when pressed — and **Theorem**, one statement a
-  day out of a textbook.
+  day out of the newest book in a folder you point at (PDF, txt or markdown).
 - **Convert** — money, temperature, mass, volume, length. Rates come from
   `open.er-api.com`, which needs no key and republishes once a day. Press Return
   and the sum stays in the list underneath.
@@ -86,6 +88,9 @@ what the panel is *for*.
 - **Background** — Solid, Veil, Glass, Clear, White. Each row says what it
   costs: the more of the desktop that comes through, the less of the type scale
   survives over a light wallpaper.
+- **Folders** — where Plans and Theorem read from. Nothing is set by default and
+  nothing is guessed at; until you pick, those two tabs say so and offer the
+  button. Nothing outside the two folders is ever read.
 
 ## Design
 
@@ -223,22 +228,14 @@ Weather asks for nothing: the three cities are fixed, so there is no location to
 request. The Wi-Fi name is not shown because macOS only gives the SSID to an app
 with location access, and this one would rather not ask.
 
-## Known local paths
-
-Two tabs read a personal knowledge base and the paths are currently hard-coded —
-change them or the tabs will simply say they found nothing:
-
-| File | Path |
-|---|---|
-| `PlansStore.swift` | `~/Documents/s/imanClaude/Plans` |
-| `TheoremStore.swift` | `~/Documents/s/imanClaude/Study/textbooks` |
-
 ## Roadmap
 
 - Apple Music alongside Spotify — blocked: Apple locked the private MediaRemote
   framework behind an entitlement in macOS 15.4, so third-party apps can no
   longer read system now-playing information without a workaround.
-- Those two paths above, as a setting.
+- The three weather cities are still fixed in `WeatherStore.swift` — Moscow,
+  Astana and Almaty. Changing them is a one-line edit; a proper picker needs a
+  place to search for one, which is not written yet.
 
 ## License
 

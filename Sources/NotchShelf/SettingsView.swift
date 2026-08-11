@@ -22,6 +22,7 @@ struct SettingsView: View {
             case .tabs: tabs
             case .colour: colour
             case .backdrop: backdrop
+            case .folders: folders
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -141,6 +142,90 @@ struct SettingsView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Folders
+
+    /// The two tabs that read somebody's own files, and where they read them
+    /// from.
+    ///
+    /// This page exists because those two paths used to be constants in the
+    /// source — one person's knowledge base, which is exactly right on one Mac
+    /// and silently empty on every other. Nothing here has a default: a folder
+    /// full of somebody's plans is not something an app should guess at.
+    private var folders: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            FolderRow(which: .plans,
+                      url: settings.plansFolder,
+                      choose: { settings.chooseFolder(.plans) },
+                      forget: { withAnimation(Theme.swap) { settings.forget(.plans) } })
+            FolderRow(which: .textbooks,
+                      url: settings.textbooksFolder,
+                      choose: { settings.chooseFolder(.textbooks) },
+                      forget: { withAnimation(Theme.swap) { settings.forget(.textbooks) } })
+
+            Text("Nothing outside these two folders is ever read")
+                .font(Theme.captionText)
+                .foregroundStyle(Theme.textTertiary)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// One folder: what it feeds, where it points, and the two things that can be
+/// done to it.
+private struct FolderRow: View {
+    let which: SettingsStore.Folder
+    let url: URL?
+    let choose: () -> Void
+    let forget: () -> Void
+
+    @State private var hovering = false
+
+    /// The path with the home folder written the way people write it. A full
+    /// `/Users/somebody/...` is both longer and less recognisable than `~`.
+    private var shown: String {
+        guard let url else { return "Not set" }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return url.path.hasPrefix(home) ? "~" + url.path.dropFirst(home.count) : url.path
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: url == nil ? "folder.badge.questionmark" : "folder.fill")
+                .accessibilityHidden(true)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(url == nil ? Theme.inkDim : Theme.tint)
+                .frame(width: 18)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(which.title)
+                    .font(Theme.rowText)
+                    .foregroundStyle(Theme.textPrimary)
+                Text(url == nil ? which.detail : shown)
+                    .font(Theme.captionText)
+                    .foregroundStyle(Theme.textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.head)
+            }
+
+            Spacer(minLength: 8)
+
+            HoverButton(title: url == nil ? "Choose…" : "Change…", action: choose)
+                .labelled("Pick the folder \(which.title) reads from")
+            HoverButton(title: "Clear", action: forget)
+                .labelled("Stop reading a folder for \(which.title)")
+                .reserved(url != nil)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 48)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.radiusMedium, style: .continuous)
+                .fill(hovering ? Theme.fillHover : Theme.surface)
+        )
+        .onHover { hovering = $0 }
+        .animation(Theme.touch, value: hovering)
     }
 }
 

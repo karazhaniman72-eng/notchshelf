@@ -2,10 +2,20 @@ import SwiftUI
 
 struct TheoremView: View {
     @ObservedObject var store: TheoremStore
+    /// For the empty state only — the same problem and the same button as
+    /// `PlansView`: with nowhere to read from, the fix belongs where the
+    /// emptiness is rather than behind the gear.
+    @ObservedObject var settings: SettingsStore
 
     var body: some View {
         Group {
-            if store.isReading {
+            if !store.hasFolder {
+                MessageView(icon: "folder.badge.questionmark",
+                            title: "No folder of textbooks yet",
+                            subtitle: "Pick one, and the newest book in it becomes a statement a day",
+                            action: (title: "Choose a folder",
+                                     run: { settings.chooseFolder(.textbooks) }))
+            } else if store.isReading {
                 MessageView(icon: "book.pages",
                             title: "Reading the textbook",
                             subtitle: "Cutting it into statements, once")
@@ -18,8 +28,8 @@ struct TheoremView: View {
                             action: (title: "Open the folder", run: store.revealFolder))
             } else {
                 MessageView(icon: "text.book.closed",
-                            title: "No textbook yet",
-                            subtitle: "Drop a PDF, txt or md into Study/textbooks",
+                            title: "No textbook in that folder",
+                            subtitle: "Drop a PDF, txt or md into it",
                             action: (title: "Open the folder", run: store.revealFolder))
             }
         }

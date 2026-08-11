@@ -434,7 +434,8 @@ struct ContentView: View {
                           plans: model.plans,
                           timer: model.timer,
                           awake: model.awake,
-                          state: state)
+                          state: state,
+                          settings: settings)
             case .calc:
                 switch state.calcMode {
                 case .math:
@@ -442,7 +443,7 @@ struct ContentView: View {
                 case .plot:
                     PlotView(store: model.math, state: state)
                 case .theorem:
-                    TheoremView(store: model.theorem)
+                    TheoremView(store: model.theorem, settings: settings)
                 }
             case .convert:
                 ConvertView(store: model.convert, state: state)

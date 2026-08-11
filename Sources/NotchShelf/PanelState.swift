@@ -96,7 +96,7 @@ enum ShelfMode: String, CaseIterable, Identifiable, PanelMode {
 /// shelf — so they hang under the panel as the same row of discs, and the page
 /// above them belongs entirely to whichever one is open.
 enum SettingsMode: String, CaseIterable, Identifiable, PanelMode {
-    case tabs, colour, backdrop
+    case tabs, colour, backdrop, folders
 
     var id: String { rawValue }
 
@@ -105,6 +105,7 @@ enum SettingsMode: String, CaseIterable, Identifiable, PanelMode {
         case .tabs: return "square.grid.2x2"
         case .colour: return "paintpalette"
         case .backdrop: return "circle.lefthalf.filled"
+        case .folders: return "folder"
         }
     }
 
@@ -113,6 +114,7 @@ enum SettingsMode: String, CaseIterable, Identifiable, PanelMode {
         case .tabs: return "Tabs"
         case .colour: return "Colour"
         case .backdrop: return "Background"
+        case .folders: return "Folders"
         }
     }
 }

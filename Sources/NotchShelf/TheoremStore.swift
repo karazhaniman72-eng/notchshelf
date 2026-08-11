@@ -17,10 +17,20 @@ final class TheoremStore: ObservableObject {
         let body: String
     }
 
-    /// Where the textbooks live. PDF, plain text or markdown — whatever gets
-    /// dropped in.
-    let folder = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Documents/s/imanClaude/Study/textbooks", isDirectory: true)
+    /// Where the textbooks live — PDF, plain text or markdown, whatever gets
+    /// dropped in — chosen by whoever is using the app.
+    ///
+    /// It was a constant here, pointing into one particular person's knowledge
+    /// base. On anybody else's Mac that folder does not exist, so this tab had
+    /// nothing to show and no way to be told where to look.
+    private let settings: SettingsStore
+
+    var folder: URL? { settings.textbooksFolder }
+    var hasFolder: Bool { folder != nil }
+
+    init(settings: SettingsStore) {
+        self.settings = settings
+    }
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var index = 0
@@ -63,17 +73,19 @@ final class TheoremStore: ObservableObject {
     /// the whole panel froze the moment this tab was opened.
     func activate() {
         guard !isReading else { return }
+        guard let folder else {
+            items = []
+            source = ""
+            parsedFrom = nil
+            return
+        }
         isReading = true
         let known = parsedFrom
 
         queue.async { [weak self] in
             guard let self else { return }
 
-            // The folder is made on first look, so the empty state can point at
-            // a place that exists rather than one to be typed out by hand.
-            try? FileManager.default.createDirectory(at: self.folder, withIntermediateDirectories: true)
-
-            guard let book = self.newestBook() else {
+            guard let book = self.newestBook(in: folder) else {
                 DispatchQueue.main.async {
                     self.items = []
                     self.source = ""
@@ -106,7 +118,7 @@ final class TheoremStore: ObservableObject {
 
     /// The most recently added book wins, so dropping a new one in switches to
     /// it without a setting to find.
-    private func newestBook() -> URL? {
+    private func newestBook(in folder: URL) -> URL? {
         let readable = ["pdf", "md", "txt", "markdown", "text"]
         let files = (try? FileManager.default.contentsOfDirectory(
             at: folder,
@@ -167,6 +179,7 @@ final class TheoremStore: ObservableObject {
     }
 
     func revealFolder() {
+        guard let folder else { return }
         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: folder.path)
     }
 

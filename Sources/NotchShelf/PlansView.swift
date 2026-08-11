@@ -8,6 +8,10 @@ struct PlansView: View {
     @ObservedObject var timer: TimerStore
     @ObservedObject var awake: AwakeStore
     @ObservedObject var state: PanelState
+    /// Only for the empty state: with no folder chosen there is nothing to show,
+    /// and the button that fixes that belongs where the emptiness is rather than
+    /// three clicks away behind the gear.
+    @ObservedObject var settings: SettingsStore
 
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -144,13 +148,29 @@ struct PlansView: View {
                      toggle: { plans.toggle(item) })
             })
         } else if calendar.access == .granted {
+            // An empty calendar on a granted account is a real answer, so it
+            // keeps its words — but if there is also no folder set, the other
+            // half of this tab has never been switched on and nothing on screen
+            // would ever say so. The button goes on the true statement rather
+            // than a false one taking its place.
             MessageView(icon: "checkmark.circle",
                         title: "Nothing scheduled",
-                        subtitle: "The rest of today is yours")
+                        subtitle: plans.hasFolder ? "The rest of today is yours"
+                                                  : "A folder with today.md in it can fill this too",
+                        action: plans.hasFolder ? nil
+                                                : (title: "Choose a folder",
+                                                   run: { settings.chooseFolder(.plans) }))
+        } else if !plans.hasFolder {
+            // No calendar and nowhere to read a plan from. The second half of
+            // that is fixable in two clicks, so say which two.
+            MessageView(icon: "folder.badge.questionmark",
+                        title: "No folder to read plans from",
+                        subtitle: "Pick one and today.md in it becomes this tab",
+                        action: (title: "Choose a folder", run: { settings.chooseFolder(.plans) }))
         } else {
             MessageView(icon: "calendar.badge.exclamationmark",
-                        title: "No calendar, no plan file",
-                        subtitle: "Plans/today.md is where this tab looks")
+                        title: "No calendar, and no today.md",
+                        subtitle: "Bullet lines in today.md show up here")
         }
     }
 
