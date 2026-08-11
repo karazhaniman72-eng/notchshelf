@@ -113,8 +113,9 @@ what the panel is *for*.
 
 ## Install
 
-A built copy is attached to every [release][releases]. One line puts it in
-`/Applications`, clears the download flag and opens it:
+A built copy lives in [`download/`](download) — Apple silicon, macOS 14 or
+later. One line puts it in `/Applications`, clears the download flag and opens
+it:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/karazhaniman72-eng/notchshelf/main/scripts/install.sh | bash
@@ -126,15 +127,16 @@ but not by Apple — a developer certificate is $99 a year — so macOS would re
 it until that flag is off. The whole of what it does is in this repository.
 
 Russian walk-through for someone who has not used a terminal before:
-[УСТАНОВКА.md](УСТАНОВКА.md).
-
-[releases]: https://github.com/karazhaniman72-eng/notchshelf/releases
+[УСТАНОВКА.md](УСТАНОВКА.md). The installer prefers a
+[release](https://github.com/karazhaniman72-eng/notchshelf/releases) asset when
+there is one and falls back to the committed copy.
 
 ## Requirements
 
-- macOS 14 or later, MacBook with a notch (it falls back to a centred strip
-  without one)
-- Swift 6 toolchain — the Xcode **Command Line Tools** are enough, full Xcode is
+- macOS 14 or later, Apple silicon (the shipped build is arm64 only; an Intel
+  Mac has to build from source)
+- MacBook with a notch — it falls back to a centred strip without one
+- To build: Swift 6 toolchain — the Xcode **Command Line Tools** are enough, full Xcode is
   not required
 - Optional: [Ollama](https://ollama.com) for worded maths and offline
   translation; Spotify for the Music tab

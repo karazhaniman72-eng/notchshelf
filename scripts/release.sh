@@ -26,8 +26,15 @@ codesign --force --deep --sign - "$DIST/$APP"
 ditto -c -k --keepParent "$DIST/$APP" "$ZIP"
 rm -rf "$DIST/$APP"
 
+# The copy the installer falls back to, committed so that the one-line install
+# works before anybody has drafted a release.
+mkdir -p download
+cp "$ZIP" download/NotchShelf.zip
+
 echo
-echo "Packed: $(pwd)/$ZIP"
-echo "sha256: $(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
+echo "Packed:  $(pwd)/$ZIP"
+echo "Shipped: $(pwd)/download/NotchShelf.zip  (commit this)"
+echo "sha256:  $(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
 echo
-echo "Next: draft a release tagged v$VERSION on GitHub and drop that zip on it."
+echo "Next: commit download/NotchShelf.zip, or draft a release tagged v$VERSION"
+echo "and drop the dist zip on it — a release takes precedence when there is one."

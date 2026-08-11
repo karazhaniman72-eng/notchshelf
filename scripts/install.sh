@@ -12,14 +12,17 @@ set -e
 REPO="${NOTCHSHELF_REPO:-karazhaniman72-eng/notchshelf}"
 APP="/Applications/NotchShelf.app"
 
-echo "Looking for the newest NotchShelf release..."
-URL=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+echo "Looking for the newest NotchShelf..."
+
+# A release is the tidier home for a build, so it wins when there is one. Until
+# then the same zip is committed to the repository and served from there, which
+# keeps this one line working the day it is pasted.
+URL=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
     | grep '"browser_download_url"' | grep '\.zip"' | head -1 \
     | cut -d'"' -f4)
 
 if [ -z "$URL" ]; then
-    echo "No release with a zip on it at github.com/$REPO — nothing to install."
-    exit 1
+    URL="https://raw.githubusercontent.com/$REPO/main/download/NotchShelf.zip"
 fi
 
 TMP=$(mktemp -d)
