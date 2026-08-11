@@ -24,7 +24,7 @@ struct TheoremView: View {
             } else if store.items.isEmpty, !store.source.isEmpty {
                 MessageView(icon: "questionmark.text.page",
                             title: "No statements in that file",
-                            subtitle: "Lines starting with Теорема, Лемма, Определение are what it looks for",
+                            subtitle: "It looks for lines starting Theorem, Lemma, Definition — or Теорема, Лемма, Определение",
                             action: (title: "Open the folder", run: store.revealFolder))
             } else {
                 MessageView(icon: "text.book.closed",
