@@ -136,8 +136,8 @@ there is one and falls back to the committed copy.
 - macOS 14 or later, Apple silicon (the shipped build is arm64 only; an Intel
   Mac has to build from source)
 - MacBook with a notch — it falls back to a centred strip without one
-- To build: Swift 6 toolchain — the Xcode **Command Line Tools** are enough, full Xcode is
-  not required
+- To build: a Swift 6 toolchain — the Xcode **Command Line Tools** are enough,
+  full Xcode is not required
 - Optional: [Ollama](https://ollama.com) for worded maths and offline
   translation; Spotify for the Music tab
 
